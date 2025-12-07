@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alameda GRH Reimbursement (Vanilla JS)</title>
+</head>
+
+<body>
+
+    <h1>Alameda CTC GRH</h1>
+    <p><em>Reimbursement Assistant Chat Interface</em></p>
+    <hr>
+
+    <div id="chat-history">
+    </div>
+
+    <br>
+
+    <div id="input-container">
+    </div>
+
+    <hr>
+
+    <h3>Current Data Payload:</h3>
+    <pre id="debug-view">{}</pre>
+
+    <script>
+        // --- Configuration (The "Brain") ---
+        const FLOW_STEPS = {
+            START: {
+                botMessage: "Hi! I'm the Alameda GRH assistant. Let's submit your reimbursement. What was the date of your trip?",
+                inputType: 'date',
+                nextStep: 'ORIGIN',
+                key: 'serviceDate',
+                validate: (val) => val && new Date(val) <= new Date(),
+                errorMsg: "Please enter a valid date in the past."
+            },
+            ORIGIN: {
+                botMessage: "Where did your trip start? (e.g., Office Address)",
+                inputType: 'text',
+                nextStep: 'DESTINATION',
+                key: 'origin',
+                validate: (val) => val && val.length > 5,
+                errorMsg: "Please enter a valid address (min 5 chars)."
+            },
+            DESTINATION: {
+                botMessage: "Where did the trip end? (e.g., Home Address)",
+                inputType: 'text',
+                nextStep: 'REASON',
+                key: 'destination',
+                validate: (val) => val && val.length > 5,
+                errorMsg: "Please enter a valid address (min 5 chars)."
+            },
+            REASON: {
+                botMessage: "Reason for the emergency ride?",
+                inputType: 'text',
+                nextStep: 'COST',
+                key: 'reason',
+                validate: (val) => val && val.length > 3,
+                errorMsg: "Please describe the reason briefly."
+            },
+            COST: {
+                botMessage: "Total cost of the ride (USD)?",
+                inputType: 'number',
+                nextStep: 'RECEIPT',
+                key: 'cost',
+                validate: (val) => val && Number(val) > 0,
+                errorMsg: "Please enter a positive number."
+            },
+            RECEIPT: {
+                botMessage: "Please upload your receipt (Image/PDF).",
+                inputType: 'file',
+                nextStep: 'REVIEW',
+                key: 'receipt',
+                validate: (files) => files && files.length > 0,
+                errorMsg: "A receipt file is required."
+            },
+            REVIEW: {
+                botMessage: "Info gathered. Click 'Submit' to finish.",
+                inputType: 'button',
+                nextStep: 'SUBMIT',
+                key: 'review',
+                validate: () => true
+            },
+            SUBMIT: {
+                botMessage: "Submitting...",
+                inputType: 'none',
+                nextStep: 'DONE'
+            },
+            DONE: {
+                botMessage: "Success! Reimbursement #GRH-8842 received.",
+                inputType: 'none'
+            }
+        };
+
+        // --- State ---
+        let currentStepId = 'START';
+        let formData = {};
+
+        // --- DOM Elements ---
+        const chatHistory = document.getElementById('chat-history');
+        const inputContainer = document.getElementById('input-container');
+        const debugView = document.getElementById('debug-view');
+
+        // --- Core Functions ---
+
+        function init() {
+            renderBotMessage(FLOW_STEPS[currentStepId].botMessage);
+            renderInputForStep(FLOW_STEPS[currentStepId]);
+        }
+
+        function renderBotMessage(text) {
+            const p = document.createElement('p');
+            p.innerHTML = `<strong>Bot:</strong> ${text}`;
+            chatHistory.appendChild(p);
+        }
+
+        function renderUserMessage(text) {
+            const p = document.createElement('p');
+            p.innerHTML = `<strong>You:</strong> ${text}`;
+            chatHistory.appendChild(p);
+        }
+
+        function updateDebugView() {
+            // We can't display the File object easily in JSON, so we show the name
+            const displayData = { ...formData };
+            if (displayData.receipt) {
+                displayData.receipt = `[File: ${displayData.receipt.name}]`;
+            }
+            debugView.textContent = JSON.stringify(displayData, null, 2);
+        }
+
+        function renderInputForStep(step) {
+            inputContainer.innerHTML = ''; // Clear previous inputs
+
+            if (step.inputType === 'none') return;
+
+            // Create Input Element
+            let inputEl;
+            if (step.inputType === 'button') {
+                // Special case for the "Review" step
+                inputEl = document.createElement('button');
+                inputEl.textContent = "Submit Reimbursement";
+                inputEl.onclick = () => handleNext(null, step);
+                inputContainer.appendChild(inputEl);
+                return;
+            }
+
+            // Standard Inputs
+            inputEl = document.createElement('input');
+            inputEl.type = step.inputType;
+            inputEl.id = 'user-input';
+            if (step.inputType === 'file') inputEl.accept = "image/*,.pdf";
+
+            // Create Send Button
+            const btnEl = document.createElement('button');
+            btnEl.textContent = step.inputType === 'file' ? 'Upload' : 'Send';
+            btnEl.onclick = () => {
+                const val = step.inputType === 'file' ? inputEl.files : inputEl.value;
+                handleNext(val, step);
+            };
+
+            // Allow "Enter" key for text/number inputs
+            inputEl.onkeydown = (e) => {
+                if (e.key === 'Enter') btnEl.click();
+            };
+
+            inputContainer.appendChild(inputEl);
+            inputContainer.appendChild(document.createTextNode(" ")); // Spacer
+            inputContainer.appendChild(btnEl);
+
+            inputEl.focus();
+        }
+
+        async function handleNext(value, step) {
+            // 1. Validation
+            let valid = false;
+            let finalValue = value;
+
+            if (step.inputType === 'file') {
+                valid = step.validate(value);
+                if (valid) finalValue = value[0]; // Store the file object
+            } else if (step.inputType === 'button') {
+                valid = true;
+            } else {
+                valid = step.validate(value);
+            }
+
+            if (!valid) {
+                renderBotMessage(step.errorMsg);
+                return;
+            }
+
+            // 2. Show User Response in Chat
+            if (step.inputType === 'file') {
+                renderUserMessage(`[Uploaded: ${finalValue.name}]`);
+            } else if (step.inputType === 'button') {
+                renderUserMessage(`[Confirmed]`);
+            } else {
+                renderUserMessage(finalValue);
+            }
+
+            // 3. Update Data (skip 'review' step)
+            if (step.key !== 'review') {
+                formData[step.key] = finalValue;
+                updateDebugView();
+            }
+
+            // 4. Move Flow
+            if (step.nextStep === 'SUBMIT') {
+                await performMockSubmission();
+            } else {
+                currentStepId = step.nextStep;
+                const nextStepObj = FLOW_STEPS[currentStepId];
+                renderBotMessage(nextStepObj.botMessage);
+                renderInputForStep(nextStepObj);
+            }
+        }
+
+        async function performMockSubmission() {
+            currentStepId = 'SUBMIT';
+            const step = FLOW_STEPS.SUBMIT;
+            renderBotMessage(step.botMessage);
+            inputContainer.innerHTML = ''; // Hide inputs
+
+            // Mock API delay
+            setTimeout(() => {
+                console.log("Submitting:", formData);
+                currentStepId = 'DONE';
+                renderBotMessage(FLOW_STEPS.DONE.botMessage);
+            }, 1500);
+        }
+
+        // Start the app
+        init();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+/* General Layout */
+body {
+    font-family: sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Chat History Area */
+#chat-history {
+    border: 1px solid #ccc;
+    height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* Message Differentiation */
+.bot {
+    color: #007bff;
+    /* Blue for the bot */
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.user {
+    color: #28a745;
+    /* Green for the user */
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Debug View */
+#debug-view {
+    background-color: #f8f9fa;
+    padding: 10px;
+    white-space: pre-wrap;
+    font-size: 12px;
+    border: 1px solid #eee;
+}
+
+/* Input Elements */
+input,
+button {
+    padding: 8px;
+    margin-right: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover {
+    background-color: #0056b3;
+}

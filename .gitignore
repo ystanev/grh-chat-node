@@ -1,0 +1,33 @@
+# Dependencies
+/node_modules
+/jspm_packages
+
+# Build artifacts and compiled files
+/dist
+/build
+/coverage
+/uploads
+
+# Logs and temporary files
+/npm-debug.log
+.eslintcache
+*.log
+
+# Environment variables and secrets
+.env
+.env.*
+.DS_Store
+
+# VS Code specific files
+.vscode/*.log
+.vscode/*.seed
+.vscode/*.tsbuildinfo
+
+# IDE/OS Specific Files
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+
+# Misc npm artifacts
+npm-shrinkwrap.json

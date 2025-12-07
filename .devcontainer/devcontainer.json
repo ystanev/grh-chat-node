@@ -1,0 +1,46 @@
+// {
+//     "name": "Chexy Ledger Service (Node, Postgres, Redis)",
+//     // Use the docker-compose file created earlier
+//     "dockerComposeFile": [
+//         "../docker-compose.yml"
+//     ],
+//     // Specify which service VS Code should connect to (your Node.js app)
+//     "service": "nodejs_app",
+//     // Mount the workspace folder into the container for code access
+//     "workspaceFolder": "/usr/src/app",
+//     // Lifecycle command to run *after* the container is created and started.
+//     // This is where you might install any global tools or run setup scripts.
+//     "postCreateCommand": "npm install",
+//     // VS Code specific settings applied within the container
+//     "customizations": {
+//         "vscode": {
+//             "settings": {
+//                 "terminal.integrated.shell.linux": "/bin/bash"
+//             },
+//             "extensions": [
+//                 "dbaeumer.vscode-eslint",
+//                 "esbenp.prettier-vscode",
+//                 "humao.rest-client",
+//                 // "ms-azuretools.vscode-docker",
+//                 "eamodio.gitlens"
+//             ]
+//         }
+//     }
+// }
+
+{
+    "name": "Chexy Ledger Service (Node, Postgres, Redis)",
+    "image": "node:25-alpine",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash"
+            },
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "humao.rest-client"
+            ]
+        }
+    }
+}

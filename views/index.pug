@@ -1,0 +1,28 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title Alameda CTC GRH Chat
+    
+    // Links external CSS
+    link(rel='stylesheet', href='/css/style.css') 
+    
+  body
+    h1 Alameda CTC GRH Reimbursement
+    p State Machine Chat Interface
+
+    #chat-history
+      p.bot Initializing XState Machine...
+
+    #input-container
+
+    hr
+
+    h3 Current Context (Data Structure)
+    pre#debug-view {}
+
+    // XState Library
+    script(src='https://cdn.jsdelivr.net/npm/xstate@4.28.0/dist/xstate.min.js')
+    // Application Logic
+    script(src='/js/chat.js')
